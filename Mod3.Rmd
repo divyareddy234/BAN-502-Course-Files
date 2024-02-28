@@ -1,0 +1,121 @@
+---
+title: "Module 3"
+output: html_document
+date: "2024-02-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Libraries  
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(e1071) #often needed for various statistical tasks
+library(ROCR) #for threshold selction
+```
+```{r}
+parole = read_csv("/Users/divyamudhireddy/Downloads/parole.csv")
+```
+Structure and summary
+```{r}
+str(parole)
+summary(parole)
+```
+
+```{r}
+parole = parole %>% mutate(violator = as_factor(violator)) %>% 
+  mutate(violator = fct_recode(violator, "No" = "0", "Yes" = "1" )) 
+
+str(parole)
+```
+```{r}
+
+# Convert variables to factors
+parole$male = as.factor(parole$male)
+
+parole$state = as.factor(parole$state)
+
+parole$crime = as.factor(parole$crime)
+parole$multiple.offenses = as.factor(parole$multiple.offenses)
+parole$race = as.factor(parole$race)
+
+# Print the structure of the data frame to confirm changes
+str(parole)
+num_violations <- sum(parole$violator == "Yes")
+```
+```{r}
+set.seed(12345)
+parole_split = initial_split(parole, prop = 0.70, strata = violator)
+train = training(parole_split)
+test = testing(parole_split)
+```
+```{r}
+mod <- glm(violator ~ state+multiple.offenses+race, data = train, family = binomial)
+
+summary(mod)
+```
+```{r}
+# Assuming mod is your logistic regression model
+
+# Create a new data frame with the specified conditions
+new_data <- data.frame(state = factor(3, levels = levels(train$state)),
+                       multiple.offenses = factor(1, levels = levels(train$multiple.offenses)),
+                       race = factor(1, levels = levels(train$race)))
+
+# Predict the probability of violation
+predicted_probability <- predict(mod, newdata = new_data, type = "response")
+
+# Format the probability to two decimal places
+formatted_probability <- round(predicted_probability, 2)
+
+# Print the formatted probability
+print(formatted_probability)
+
+```
+```{r}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+CM <- table(test$violator, as.numeric(predTest >= 0.5))
+CM
+# Accuracy = (TN + TP) / total observations
+(CM[1, 1] + CM[2, 2]) / sum(CM)
+```
+
+
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
